@@ -1,0 +1,1 @@
+Scripts d'exemple per provar ingesta, transformació i càrrega. Cada script és un esquelet que cal adaptar a la plataforma origen i a Oracle.
