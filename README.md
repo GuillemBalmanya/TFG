@@ -1,6 +1,6 @@
-#TFG
-#Author: Guillem Balmanya Bocigas (1671206@uab.cat)
-#Tutor: Antonio Espinosa Morales (AntonioMiguel.Espinosa@uab.cat) i Rafa Alarcón
+###TFG
+##Author: Guillem Balmanya Bocigas (1671206@uab.cat)
+##Tutor: Antonio Espinosa Morales (AntonioMiguel.Espinosa@uab.cat) i Rafa Alarcón
 
 Aquest repositori conté el desenvolupament del Treball Final de Grau (TFG) consistent en el disseny i implementació d’un pipeline de dades per integrar informació procedent d’una plataforma d’investigació cap al Data Warehouse Oracle de la UAB.
 
