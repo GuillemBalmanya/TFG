@@ -1,6 +1,6 @@
-###TFG
-##Author: Guillem Balmanya Bocigas (1671206@uab.cat)
-##Tutor: Antonio Espinosa Morales (AntonioMiguel.Espinosa@uab.cat) i Rafa Alarcón
+### TFG
+## Author: Guillem Balmanya Bocigas (1671206@uab.cat)
+## Tutor: Antonio Espinosa Morales (AntonioMiguel.Espinosa@uab.cat) i Rafa Alarcón
 
 Aquest repositori conté el desenvolupament del Treball Final de Grau (TFG) consistent en el disseny i implementació d’un pipeline de dades per integrar informació procedent d’una plataforma d’investigació cap al Data Warehouse Oracle de la UAB.
 
@@ -22,7 +22,7 @@ Documentació tècnica i especificació formal (SRS)
 
 L’objectiu és construir una solució robusta, mantenible i extensible que pugui evolucionar cap a funcionalitats avançades com millores d’infraestructura o integracions futures.
 
-🎯 Objectius tècnics
+# 🎯 Objectius tècnics
 
 Garantir integritat i qualitat de dades
 
@@ -34,7 +34,7 @@ Assegurar compatibilitat amb l’ecosistema Oracle
 
 Proporcionar base per a futurs desenvolupaments analítics
 
-🏗 Arquitectura general
+# 🏗 Arquitectura general
 
 El projecte segueix una arquitectura modular:
 
@@ -50,7 +50,7 @@ Loader – Inserció/actualització al DW Oracle
 
 Monitoratge – Logs i control d’execució
 
-📁 Estructura del repositori
+# 📁 Estructura del repositori
 tfg_pipeline_repo/
 │
 ├── docs/            # Documentació (SRS i annexos)
@@ -61,7 +61,7 @@ tfg_pipeline_repo/
 ├── .gitignore
 └── README.md
 
-🔐 Consideracions de seguretat
+# 🔐 Consideracions de seguretat
 
 No s’inclouen credencials reals
 
@@ -69,15 +69,15 @@ Gestió de secrets mitjançant variables d’entorn
 
 Compliment de bones pràctiques de seguretat
 
-🚀 Estat del projecte
+# 🚀 Estat del projecte
 
-🔹 Fase actual: Prototip funcional
-🔹 Pendent: Validació amb plataforma real i estudi definitiu de la integració ORI
+🔹 Fase actual: Definició d'objectius
+🔹 Pendent: Validació d'objectius
 
 📄 Documentació associada
 
 Especificació SRS (document formal)
 
-Guia d’ús i configuració
+# Guia d’ús i configuració
 
-Informe de viabilitat tecnològica
+# Informe de viabilitat tecnològica
