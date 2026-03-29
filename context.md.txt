@@ -1,0 +1,818 @@
+El present treball de final de grau (TFG), desenvolupat a la Universitat Autònoma de Barcelona, s’emmarca dins del context de l’Oficina de Govern de les Dades. L’any 2021, la Universitat va decidir unificar tots els seus projectes de recerca sota una sola infraestructura dedicada a la recerca, o CRIS (Current Research Information System), pertanyent a la companyia Elsevier, una empresa líder en gestió i anàlisi d’informació científica [1]. 
+
+ 
+
+Aquest tipus d’infraestructures, especialment dissenyades per a la recerca d’institucions educatives, permeten centralitzar, organitzar i mostrar tota l’activitat de recerca d’una institució en un mateix lloc. També faciliten la generació d’informes i indicadors, tals com informes institucionals, memòries de recerca o seguiment de projectes, entre d’altres. A més, permeten crear perfils d’investigadors i publicar la recerca en portals de manera automàtica perquè la societat pugui consultar quines publicacions existeixen o quines estan actives. 
+
+ 
+
+Tal com es pot observar a la figura 1 (A1.1), aquesta informació es troba en servidors virtuals externs a l’emmagatzematge centralitzat de la Universitat. 
+
+ 
+
+ 
+
+Aquest emmagatzematge centralitzat és un sistema que agrega dades de diverses fonts en un únic punt. Aquests magatzems són essencials per a iniciatives d’anàlisi de dades, intel·ligència de negoci o per elaborar models d’aprenentatge computacional (machine learning) [3]. 
+
+ 
+
+La filosofia de l’emmagatzematge ha estat la de no consultar directament els orígens de les dades en processos d’extracció, càrrega i transformació de dades (ELT), ja que aquests processos acostumen a ser operacions molt carregoses i intrusives. Aquestes operacions podrien interferir amb els processos adjacents de la Universitat. Per exemple, si es realitzessin processos ELT en plena matriculació i aquests hi poguessin interferir, afectarien tots els estudiants de la Universitat, així com el tancament d’actes, l’expedició de títols i molts altres procediments. 
+
+ 
+
+Per tant, per tal d’evitar aquest supòsit, actualment es realitza una còpia setmanal de totes les dades disponibles a la Universitat per a la seva gestió, que es desen en un magatzem de dades (Data Warehouse). Aquest tipus d’emmagatzematge, amb propòsits principalment analítics, s’alimenta d’aquesta còpia una vegada al mes, incloent-hi les dades disponibles al CRIS. 
+
+Aquesta còpia es coneix com a BCK i consisteix principalment en un conjunt de taules a Oracle. La càrrega de dades al Data Warehouse es realitza una vegada al mes, però la BCK es carrega setmanalment per tal de garantir que, en cas que es produeixi algun problema, sempre es disposi de dades actualitzades com a molt tard de la setmana anterior. 
+
+ 
+
+En concret, el procés d’ingesta al Data Warehouse de les dades de recerca és especial, ja que, com que aquestes dades es troben en el CRIS extern d’Elsevier, conegut com EGRETA, només s’hi pot accedir a través de WebService. Aquest servei és “un sistema de software que permet que diferents aplicacions es comuniquin entre si a través de la xarxa”, proporcionant així una “forma estandarditzada d’intercanviar dades entre diferents sistemes de software” (en aquest cas, Pure i el Data Warehouse), independentment del llenguatge de programació o de la plataforma on estiguin construïts [4]. 
+
+ 
+
+La ingesta es realitza mitjançant l’eina Oracle Data Integrator (ODI), que permet extreure informació, processar-la i emmagatzemar-la de manera estructurada. 
+
+ 
+
+La PureAPI, que permet la connexió entre els serveis proporcionats per Elsevier, és una API basada en el protocol REST i utilitza mètodes HTTP estàndard (GET, POST, PUT, DELETE) [5]. Actualment retorna les dades en format XML. Elsevier manté aquest format per garantir la compatibilitat amb institucions que encara el necessiten, però en un futur les dades només estaran disponibles en format JSON. Per tant, esdevé una necessitat per a l’Oficina de Govern de les Dades modificar els processos actuals i preveure els canvis de format futurs. 
+
+En aquest context, cal adaptar el procés d’ingesta de dades actual, així com explorar alternatives que permetin reduir al mínim la dependència d’eines externes. 
+
+2 Estat de l’art 
+
+Aquest apartat explica la infraestructura actual i les eines utilitzades. A la figura 2 de l’apèndix A1 es pot veure una il·lustració que representa la infraestructura actual i tot el procés que se segueix per carregar les dades al Data Warehouse, amb totes les eines i tecnologies aplicades. 
+
+ 
+
+L’API (Application Programming Interface) és un servei web de tipus REST (Representational State Transfer) que segueix principis arquitectònics específics per permetre una comunicació eficient a través de protocols HTTP. En concret, les API RESTful utilitzen els mètodes estàndard GET, POST, PUT i DELETE per interactuar amb els recursos del servidor. 
+
+ 
+
+Un endpoint és una adreça concreta dins d’un servei web (API) que permet accedir a un conjunt específic de dades o funcionalitats. En el nostre cas, cada endpoint correspon a un tipus d’entitat del model de recerca, com ara persones, organitzacions, projectes i d’altres. El primer endpoint que s’atacarà, Awards, permet recuperar informació completa sobre els ajuts de recerca, incloent-hi tipus d’ajuts, dates, participants i altres metadades associades [8]. 
+
+ 
+
+El motor de processament Saxon és un motor especialitzat en el processament de documents XML. S’utilitza principalment per executar transformacions XSLT, consultes XPath i processament XQuery. En aquest entorn, on Pure API retorna dades en format XML, Saxon és essencial per transformar aquests documents en format CSV, un format adequat per a la posterior ingesta al Data Warehouse. També permet aplicar lògica de neteja i normalització abans que les dades arribin a les capes de staging o al mateix Data Warehouse. 
+
+ 
+
+Els Knowledge Modules, LKM (Loading Knowledge Modules) i IKM (Integration Knowledge Modules), formen part de l’ecosistema d’integració de dades d’Oracle i proporcionen connectors, transformacions i funcionalitats preconfigurades per facilitar la càrrega i transformació de dades. Aquests mòduls encapsulen bones pràctiques i patrons d’integració, i permeten accelerar el desenvolupament de processos ELT. En aquest projecte, que integra dades provinents de Pure API, els Knowledge Modules ajuden a automatitzar tasques com la detecció de canvis o la gestió d’errors. 
+
+ 
+
+La Universitat Autònoma compta amb una gran varietat de bases de dades on s’emmagatzema la informació de la seva activitat. Una d’aquestes bases de dades és el magatzem de dades o Data Warehouse, que és una base de dades orientada específicament a permetre activitats d’intel·ligència de negoci. Aquest tipus d’infraestructures reuneixen dades de molts orígens diferents i les agrupen en un sol punt per, generalment, realitzar consultes de caràcter analític que permetin respondre preguntes de negoci. En el cas de la Universitat, aquest Data Warehouse és de la companyia Oracle [6]. 
+
+  
+
+Postman és l’eina que s’utilitza per realitzar peticions REST mitjançant HTTP a l’API de Pure, que retorna la informació emmagatzemada al CRIS d’Elsevier. Aquesta eina és essencial per explorar els endpoints, com AWARDS, i entendre l’estructura de les dades de retorn [7]. 
+
+Staging (BCK) és la càrrega setmanal de dades que realitza l’equip de l’Oficina de Govern de les Dades. Actua com la base des d’on s’alimenta el Data Warehouse. L’objectiu inicial és carregar les dades des de l’endpoint utilitzant el mínim d’eines externes possibles. 
+
+Oracle Data Integrator (ODI) és una plataforma d’integració de dades basada en el procés ELT (Extract, Load and Transform), on les transformacions s’executen directament al motor de la base de dades per obtenir un rendiment òptim. En el context d’aquest projecte, és l’eina que s’empra per realitzar la ingesta de dades cap al Data Warehouse [9]. 
+
+ 
+
+3 Objectius del treball 
+
+L’objectiu principal d’aquest treball és demostrar la viabilitat d’una pipeline d’ingesta de dades que traslladi tots els processos de transformació que actualment utilitzen XSLT per processar XML cap a uns altres processos que permetin treballar amb dades en format JSON. Tot això emprant la infraestructura existent i procurant afegir el mínim nombre d’eines externes possible. Així mateix, es busca mantenir la mateixa funcionalitat i garantir l’equivalència de les dades entre els dos formats. El treball també inclou provar i validar el projecte desenvolupat, així com documentar tot el procés. 
+
+ 
+
+Per tant, podem definir els objectius d’aquest treball en: 
+
+ 
+
+1. Dissenyar o modificar el sistema d’ingesta de dades a les taules de la BCK basat en JSON i verificar l’equivalència dels resultats amb els obtinguts en XML. 
+
+ 
+
+2. Investigar i comparar altres eines o mètodes per optimitzar i millorar el procés ELT d’ingesta de dades. 
+
+ 
+
+3. Avaluar la capacitat de la infraestructura i dels processos actuals, principalment ODI, i determinar si és necessari utilitzar eines addicionals. 
+
+ 
+
+4. Implementar i validar els processos desenvolupats en un entorn de desenvolupament, dur a terme proves en entorns amb volums de dades mitjans i realitzar una simulació en un escenari de producció. 
+
+ 
+
+5. Argumentar possibles canvis o millores als processos. 
+
+ 
+
+Com a objectius addicionals s’han definit: 
+
+ 
+
+6. Validar i desenvolupar la càrrega de dades des dels esquemes intermedis (staging) cap al Data Warehouse. 
+
+ 
+
+7. Realitzar una comparativa de rendiment entre diferents eines i metodologies aplicades. 
+
+ 
+
+8. Desenvolupar totes les pipelines per a tots els endpoints disponibles, i no només per a l’endpoint AWARDS, com es preveu inicialment. 
+
+ 
+
+9. Si escau i està justificat, desenvolupar aquest procés de càrrega de manera incremental i analitzar els beneficis i perjudicis que comporta. 
+
+4 Metodologia del treball 
+
+La metodologia emprada en aquest projecte segueix un enfocament iteratiu i incremental, que permet adaptar-se als canvis, les necessitats de la infraestructura i dels resultats obtinguts en cada fase. 
+
+ 
+
+A més, el projecte s’ha estructurat mitjançant un mètode de treball basat en fases, on per a cada etapa s’estableixen objectius específics, tasques concretes i entregables. Aquest enfocament permet delimitar clarament l’inici i el final de cada fase, assegurar un seguiment rigorós i garantir la qualitat del resultat final. 
+
+ 
+
+La metodologia es divideix en cinc blocs principals: 
+
+ 
+
+1. Anàlisi inicial i comprensió del problema 
+
+Aquesta primera fase té com a objectiu entendre en profunditat l’arquitectura actual de la ingesta, el funcionament de Pure API i els seus endpoints, l’estructura semàntica de les dades en format JSON i les restriccions i capacitats de la infraestructura existent. 
+
+2. Disseny d’una nova pipeline d’ingesta 
+
+Un cop entès el context, es defineix l’arquitectura de la pipeline JSON → BCK → DW, establint els fluxos de dades, les transformacions necessàries i els punts crítics del procés. 
+
+ 
+
+3. Implementació iterativa  
+
+La implementació es realitza de manera incremental, començant per un endpoint (AWARDS) i ampliant progressivament la solució a la resta d’entitats del model de recerca. 
+
+ 
+
+4. Validació, proves i optimització  
+
+Un cop implementada la pipeline, es duen a terme proves exhaustives per garantir la robustesa, la coherència de les dades i el rendiment del sistema. També s’hi inclouen ajustos i optimitzacions derivats dels resultats obtinguts. 
+
+ 
+
+5. Documentació i conclusions  
+
+Finalment, es documenta tot el procés, incloent-hi decisions tècniques, resultats, limitacions i possibles línies de millora. 
+
+ 
+
+5 Planificació del desenvolupament 
+
+Tal com s’ha mencionat en la metodologia, aquest treball està dividit en fases. Cada fase té un objectiu a complir i un entregable que permet validar-ne la compleció. Tot i ser una planificació inicial, ha de quedar clarament definit quin és l’inici i el final de cada fase, així com les condicions o entregables necessaris per considerar-la superada amb èxit. Les fases en què s’estructura el projecte són les següents: 
+
+1. Preparació, anàlisi i descobriment dels endpoints (1–2 setmanes) 
+
+Tasques: obtenir les API keys i les credencials de base de dades; estudiar els endpoints; obtenir mostres JSON; definir l’esquema de destinació a la BCK. 
+
+Entregable: informe d’exploració amb mostres i esquema proposat. 
+
+2. Anàlisi i comprensió de la infraestructura actual (1 -2 setmanes) 
+
+Tasques: preparar i investigar l’arquitectura mitjançant l’entorn proporcionat (portàtil amb el programari i l’esquema configurats). 
+
+Entregable: entorn ODI funcionant i documentat. 
+
+3. Implementació de la pipeline (2–4 setmanes)  
+
+ 
+
+Tasques: crear jobs i mappings a ODI per descarregar JSON i carregar-lo a la BCK; aplicar transformacions bàsiques.  
+
+Entregable: pipeline operativa, scripts i captures d’execució. 
+
+ 
+
+4. Implementació d’una pipeline incremental (1–2 setmanes)  
+
+ 
+
+Tasques: dissenyar i provar la càrrega incremental (estratègia timestamp + MERGE).  
+
+ 
+
+Entregable: documentar les opcions. Si no s’implementa, justificar-ne el motiu. En cas d’implementar-se, proporcionar scripts i captures d’execució. 
+
+ 
+
+5. Escalat i benchmark (1–2 setmanes)  
+
+ 
+
+Tasques: provar amb volums diversos, mesurar el rendiment, registrar errors i ajustar el procés.  
+
+ 
+
+Entregable: informe de proves amb resultats (taules de temps, volum i errors). 
+
+ 
+
+6. Comparativa d’alternatives (1-2 setmanes)  
+
+ 
+
+Tasques: analitzar els avantatges i inconvenients d’altres eines o metodologies.  
+
+ 
+
+Entregable: documentar alternatives, beneficis i perjudicis. 
+
+ 
+
+7. Documentació i memòria (1-2 setmanes) 
+
+ 
+
+Tasques: redactar la memòria del TFG amb metodologia, els resultats, les recomanacions i possibles extensions. 
+
+ 
+
+Entregable: memòria TFG i annex amb codis, mappings i instruccions de desplegament. 
+
+ 
+
+Per tal de poder realitzar un correcte seguiment de cada fase, s’ha definit un diagrama de Gantt (Figura A1.3) que indica les fases, la seva temporalitat aproximada i els objectius i entregables a assolir. 
+
+6 Resultats esperats 
+
+Els resultats esperats d’aquest projecte són el desenvolupament satisfactori de la pipeline d’ingesta de dades; l’anàlisi i comprensió profunda dels sistemes i de la infraestructura a tractar; el desplegament i les proves de rendiment del producte desenvolupat; i la comparativa entre múltiples eines, així com la proposta de suggeriments de millora o optimització. 
+
+———————————————— 
+
+E-mail de contacte: 1671206@uab.cat 
+
+Treball tutoritzat per: Espinosa Morales, Antonio (Àrea d’Arquitectura i Tecnologia de Computadors) 
+
+Curs 2025/2026 
+
+7 Bibliografia 
+
+[1] euroCRIS. (s.d.). Why does one need a CRIS? https://eurocris.org/why-does-one-need-cris 
+
+[2] Universitat Autònoma de Barcelona. (2021). Informe sobre el ciberatac – Claustre desembre 2021. https://www.uab.cat/doc/informe-ciberatac-claustre-des21 
+
+[3] IBM. (s.d.). What is a data warehouse? https://www.ibm.com/mx-es/think/topics/data-warehouse 
+
+[4] Nextcode Global. (s.d.). Webservice: definición y ejemplos. https://nextcode.global/webservice-definicion-y-ejemplos/ 
+
+[5] Elsevier. (s.d.). Pure API documentation. https://api.elsevierpure.com/ws/api/documentation/index.html 
+
+[6] Oracle. (2024). Introduction to data warehouse concepts. https://docs.oracle.com/en/database/oracle/oracle-database/26/dwhsg/introduction-data-warehouse-concepts.html 
+
+[7] Postman. (s.d.). API Client. https://www.postman.com/product/api-client/ 
+
+[8] Oracle. (s.d.). Oracle Data Integrator Documentation (14.1.2). https://docs.oracle.com/en/middleware/fusion-middleware/data-integrator/14.1.2/index.html 
+
+[9] kindly. (s.d.). Flatterer. https://github.com/kindly/flatterer 
+
+[10] Saxonica. (s.d.). What is Saxon? https://www.saxonica.com/html/documentation12/about/whatis.html 
+
+[11] Tech With Tim. (2022). How to convert JSON to CSV in Python [Vídeo]. https://www.youtube.com/watch?v=0T1OFksnNJ0 
+
+[12] Stack Overflow. (2022). How to export API JSON data to CSV file with Python. https://stackoverflow.com/questions/71573022/how-to-export-api-json-data-to-csv-file-with-python 
+
+[13] Postman. (s.d.). Convert a JSON response to CSV. https://www.postman.com/postman/postman-answers/collection/diva9tf/convert-a-json-reponse-to-csv 
+
+[14] Stack Overflow. (2012). How to convert JSON to CSV format and store in a variable? https://stackoverflow.com/questions/8847766/how-to-convert-json-to-csv-format-and-store-in-a-variable/31536517#31536517 
+
+ 
+
+8 APÈNDIX 
+
+A1. Figures 
+
+ 
+
+ 
+
+ 
+
+Figura 1. Esquema de bases de dades i servidors de la Universitat Autònoma de Barcelona [2]. 
+
+ 
+
+ 
+
+Figura 3. Diagrama de Gantt 
+
+ 
+
+ 
+
+ 
+
+Figura 2. Esquema de funcionament 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+Cal explicar de manera general quina información conté Awards. (esta mes o menys fet) 
+
+ 
+
+Per tal de poder dur a terme aquest procés de transformació és necessari realitzar una exploració, en primera instància de l’endpoint Awards, per tal de poder descobrir la informació sobre la que es treballa, la seva estructura i les diferències, tant de contingut, com estructurals que existeixen entre la versió en format XML i JSON. 
+
+ 
+
+Awards és un endpoint que conté tota la informació respecte a ajuts a la recrerca de programes d’investigació de la Universitat. Es desa la informació de tots els ajuts proporcionats passats i presents (mirar si es borren, el més àntic i el més nou). Hi ha un total de 43.193 ajuts diferents registrats.  
+
+ 
+
+La resposta és un objecte embolcall (wrapper) que facilita la paginació, on les dades reals es troben dins de l'array items. Cada "award" és un objecte molt complet que enllaça amb altres entitats del sistema (persones, unitats organitzatives, projectes) mitjançant uuid i uri. Mostra també una estructura típica d’una API basada en la tecnologia PURE d’Elsevier. Els components claus de la resposta son;  
+
+ 
+
+1. En primer lloc les metadades de la paginació. Hi ha tres camps a l’inici de la resposta; count, pageInformation/size i offset que descriuen de manera general les característiques de la resposta. El primer camp indica el nombre total de resultats disponibles. El segon camp indica, al contenir el camp size, el tamany especific de la resposta. En aquesta cas i al tractar-se d’una prova exploratoria el camp size té un valor 1 i per tant només es mostrarà una resposta. Finalment el camp offset indica la posició de la resposta, que al ser 0 indica la posició inicial. 
+
+ 
+
+2. La segona part de la resposta es troba dins d’un objecte de tipus AwardManagementAward (! Cal investigar si aquest objecte és personaloitzat o estàndar en PURE) . Quines implicacions té utilitzar un objecte d’aquest estil? 
+
+ 
+
+Els camps més rellevants d’aquest objecte son; 
+
+ 
+
+2.1 Identificadors: Hi ha dos identificadors principals utilitzats per a referències internes, uuid i pureId (Perquè serveixen i que identifiquen) . A més n'hi ha una llista diversa d’indentificadors, incloent el “ID FENIX” que (repasar) és un identificador itern àntic (invent) ja que anteriorment la plataforma es coneixia com Fènix. 
+
+ 
+
+2.2 Dates i períodes: Alguns dels camps inclouen awardDate que indica la data de concessió de l’ajut. Hi ha un altra data, actualPeriod que indica el període real del projecte i finalment expectedPeriod indica el perídoe previst originalment. 
+
+ 
+
+2.3 Participants: (awardHolders) conté informació sobre l'investigador principal (PI), amb el seu identificador de persona uuid i el percentatge de dedicació d'aquesta persona en el projecte a desenvolupar. (Cal preguntar que és el percentatge de dedicació)  
+
+ 
+
+2.4 Col·laboradors i Organitzacions: aquest apartat contenen les entitats externes que participen en els projectes de recerca (collaborators) i la unitat de la UAB que egstiona l'ajut, incloent noms en català, castellà i anglès (managingOrganizationalUnit). 
+
+ 
+
+ 
+
+2.5 Finançament: (fundingProject) és el projecte de finançament associat i (funder) és la entitat que dóna els diners (e.g. l'Ajuntament de Barcelona o altres institucions, tant públiques com privades). 
+
+ 
+
+2.6 Altres camps: Finalment com a camps suplementaris hi ha les múltiples possibles descripcions de l'award (descriptions) i l'estat actual (workflow). 
+
+ 
+
+Referències consulta JSON https://egreta.uab.cat/ws/api/api-docs/index.html?url=/ws/api/openapi.yaml#/activity/activity_list  
+
+ 
+
+ 
+
+Cal posar quins son els possibles valors de cada camp, per exemple workflow pot ser Validates o in progress etc... 
+
+ 
+
+Per altra banda, les diferències amb els camps de XML son: 
+
+ 
+
+Diferències estructurals principals 
+
+ 
+
+referències consultes XML https://egreta.uab.cat/ws/api/524/api-docs/documentation/Content/Topics/Web_Services_Intro.htm   i  
+https://egreta.uab.cat/ws/api/524/awards?q=16318246-8fdc-442a-a763-4947dae6181c&apiKey=271e580b-4073-463f-a91a-65f625783275 
+
+  
+
+1. Format i estructura general 
+
+  
+
+Aspecte	XML	JSON 
+
+Element arrel	<result> amb xsi:schemaLocation	Objecte anònim {} 
+
+Metadades paginació	<pageInformation><offset>/<size>	pageInformation.offset / .size 
+
+Llista d'ítems	<items><award ...>	items[] amb typeDiscriminator 
+
+  
+
+  
+
+2. Identificadors i atributs 
+
+XML exposa els identificadors directament com a atributs de l'element: 
+
+<award uuid="..." pureId="..." externalId="..." externalIdSource="..."> 
+
+JSON els distribueix de forma més detallada dins identifiers[]: 
+
+{ "typeDiscriminator": "ClassifiedId", "pureId": 45755723, "id": "AJU_30193", ... } 
+
+A més, JSON inclou camps addicionals com version (hash SHA1) i typeDiscriminator per distingir tipus. 
+
+  
+
+  
+
+3. Títols multilingüe 
+
+XML: Llista de <text locale="ca_ES|en_GB|es_ES"> dins <title> 
+
+JSON: Objecte pla amb claus de locale: 
+
+"title": { "en_GB": "...", "es_ES": "...", "ca_ES": "..." } 
+
+  
+
+  
+
+4. Awardholders / Participants 
+
+XML (<awardholder>) és molt detallat: inclou totes les dades de la persona, rol, unitats organitzatives i períodes inline dins cada awardholder. 
+
+JSON (awardHolders[]) fa servir referències en comptes de dades inline: 
+
+"person": { "systemName": "Person", "uuid": "b85259e9-..." } 
+
+Només retorna l'UUID, sense dades expandides de la persona ni les unitats organitzatives associades. 
+
+  
+
+  
+
+5. Organitzacions 
+
+XML: Inclou les unitats organitzatives (<organisationalUnits>) i externes (<externalOrganisations>) directament al nivell de l'award, amb tots els noms i tipus. 
+
+JSON: Utilitza referències per UUID (p.ex. "funder": { "systemName": "ExternalOrganization", "uuid": "..." }). No apareix un bloc equivalent d'organisationalUnits al nivell superior. 
+
+  
+
+  
+
+6. Finançament 
+
+XML: No hi ha bloc explícit de finançament en l'exemple XML proporcionat (o no és visible). 
+
+JSON: Inclou un bloc fundings[] detallat amb funder, awardedAmount (EUR 5.000), fundingProjectScheme i fundingCollaborators. 
+
+  
+
+  
+
+7. Keyword Groups 
+
+XML: Usa <structuredKeyword> dins <keywordContainers> sense paraules lliures. 
+
+JSON: Distingeix entre FullKeywordGroup (amb freeKeywords i períodes de l'ajut) i ClassificationsKeywordGroup, amb més granularitat i informació de períodes econòmics. 
+
+  
+
+  
+
+8. Estat (Status) 
+
+XML: <statusDetails><status key="ContractNegotiation"> amb valor "Vigent/Current". 
+
+JSON: "status": { "typeDiscriminator": "CurtailedAwardStatus", "date": "2023-10-05", "reason": "Fi de l'ajut" } — indica que l'ajut ha finalitzat. 
+
+  
+
+  
+
+9. Camps exclusius del JSON 
+
+- version (hash de la versió del registre) 
+
+- typeDiscriminator (a cada objecte) 
+
+- cluster (referència a AwardCluster) 
+
+- expectedPeriod (període previst vs. actualPeriod) 
+
+- customDefinedFields 
+
+- collaborators[] (separats dels awardHolders) 
+
+- Detall econòmic complet (fundings) 
+
+  
+
+  
+
+10. Camps exclusius del XML 
+
+- <managingOrganisationalUnit> (unitat gestora explícita) 
+
+- <collaborative> (boolean) 
+
+- <awardDate> visible directament 
+
+- <extended> (boolean per pròrrogues) 
+
+- <links> (URL APM) 
+
+- <relatedProject> (vincle al projecte associat) 
+
+- Dades expandides de persones i unitats organitzatives (sense necessitat de crides addicionals) 
+
+--- 
+
+Resum 
+
+El format XML és més complet i autocontingut: expandeix totes les relacions inline (persones, unitats, organitzacions). El JSON és més lleuger però requereix crides addicionals per UUID per obtenir les dades completes de les entitats relacionades. El JSON afegeix informació financera i de versió que no apareix al XML, mentre que el XML inclou metadades de gestió (unitat gestora, projecte relacionat, enllaços) absents al JSON. 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+Les possibles solucions que proposo son quatre: 
+
+ 
+
+1. Saxon-JS /Saxon-HE: Aquesta és la opció que implica menys canvis en la infraestructura i metodologia actual. En l'entorn actual ja s'utilitza l'eina Saxon i XSLT 3.0 permet el suport natiu per a JSON. No seria necessari convertir el JSON a XML primer abans d'aplicar les plantilles XSLT ja que es pot llegir directament. Mitjançant les funcions json-to-xml() o parse-json(). Aquesta opció propon seguir utilitzant la infraestructura actual i només modificar les plantilles XSLT per porcessar el mapa JSON en comptes de XML. El problema principal d'aquesta implementació és que es manté la dependència a eines externes, i per tant, no és ideal. 
+
+ 
+
+2. ODI natiu:  
+
+ 
+
+ 
+
+Aquesta és una transició lògica, ja que JSON és el format natiu de la majoria d'APIs modernes i és més lleuger que l'XML. Si l'objectiu és mantenir el mínim d'eines externes i aprofitar el coneixement actual en XSLT/Saxon, aquí tens les millors opcions: 
+
+1. Saxon-JS / Saxon-HE (XSLT 3.0) - La més propera a la teva idea 
+
+Si ja utilitzeu Saxon, la millor notícia és que XSLT 3.0 té suport natiu per a JSON. No necessites convertir el JSON a XML primer; XSLT 3.0 pot llegir JSON directament. 
+
+*   Com funciona: Utilitzes la funció json-to-xml() o parse-json() de XSLT 3.0. 
+
+*   Avantatges: Reutilitzes la infraestructura de Saxon que ja teniu a l'ODI. Només has d'actualitzar la versió de Saxon (si és antiga) i modificar la plantilla XSLT per processar el mapa JSON en lloc de nodes XML. 
+
+*   Exemple de flux: ODI (JSON) -> Saxon (XSLT 3.0) -> CSV. 
+
+2. ODI Nativa (Complex File Component / JSON Driver) 
+
+Oracle Data Integrator té connectors específics per a fitxers complexos (JSON). 
+
+*   Com funciona: Configures un Data Server de tipus "Complex File" a la topologia de l'ODI, apuntant al fitxer JSON i utilitzant un fitxer nXSD (XML Schema amb anotacions JSON) per definir l'estructura. 
+
+*   Avantatges: Tot es queda dins de l'ODI. No necessites Saxon ni scripts externs. L'ODI tractarà el JSON com si fos una taula relacional. 
+
+*   Inconvenients: La configuració del driver nXSD pot ser feixuga si el JSON és molt profund o canviant. 
+
+3. Processament amb Python o Groovy (Dins d'ODI) 
+
+L'ODI permet executar codi Python (Jython) o Groovy en els seus procediments. 
+
+*   Com funciona: Un petit script que llegeixi el JSON i l'escrigui directament a CSV o, millor encara, l'inserti directament a la taula d'estrena (staging) de la base de dades. 
+
+*   Avantatges: És extremadament ràpid i flexible per gestionar l'array items que has mostrat en el fitxer. No requereix instal·lar res si l'agent de l'ODI ja té les llibreries estàndard. 
+
+4. jq (L'eina de línia de comandes) 
+
+Si finalment optes per una eina externa molt lleugera, jq és l'estàndard de la indústria per a processar JSON des de Bash/Shell. 
+
+*   Com funciona: Una sola línia de comanda: jq -r '.items[] | [.pureId, .uuid, .awardDate] | @csv' response.json > output.csv. 
+
+*   Avantatges: És increïblement ràpida i està dissenyada específicament per a això. 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+Opció XSLT 3.0 (Saxon) Si voleu seguir amb la filosofia de plantilles, aquesta és la documentació oficial per processar JSON directament des de XSLT: 
+
+XPath 3.1 Functions for JSON (W3C): Documentació de les funcions json-to-xml() i parse-json(). 
+
+W3C - JSON Functions and Operators (https://www.w3.org/TR/xpath-functions-31/#json-functions) 
+
+Saxon Documentation (JSON): Com utilitzar Saxon per processar JSON. 
+
+Saxonica - Processing JSON (https://www.saxonica.com/html/documentation12/functions/fn/json-to-xml.html) 
+
+Tutorial de referència (Altova): Una guia visual de com XSLT 3.0 mapeja JSON. 
+
+XSLT 3.0 JSON Mapping (https://www.altova.com/training/xslt3/json-to-xml) 
+
+Opció Nativa ODI (Oracle Data Integrator) Aquesta és la via per eliminar "peces externes" i fer servir els drivers d'Oracle: 
+
+ODI Connectivity to JSON: Guia oficial d'Oracle sobre el "Complex File Driver". 
+
+Oracle Support - How to use JSON files in ODI (https://docs.oracle.com/en/middleware/fusion-middleware/data-integrator/12.2.1.3/tutorial-json-file/index.html) 
+
+nXSD (JSON to XML Schema): Com definir l'estructura JSON perquè l'ODI la llegeixi com una taula. 
+
+Oracle Blog - Native JSON Support in ODI (https://blogs.oracle.com/dataintegration/post/native-json-support-in-oracle-data-integrator-12c) 
+
+Opció Scripting (Groovy dins d'ODI) Molt útil si voleu una solució ràpida i programàtica sense dependre de drivers complexos: 
+
+Groovy JSON Slurper: La llibreria estàndard de Groovy per llegir JSON (molt potent). 
+
+Groovy Documentation - Parsing JSON (https://docs.groovy-lang.org/latest/html/documentation/index.html#_json_slurper) 
+
+Opció jq (Eina externa ultra-lleugera) Si finalment es decideix que la velocitat de transformació és crítica (milions de registres): 
+
+Manual de jq: Referència per convertir JSON a CSV en una sola línia. 
+
+jq Manual - Format as CSV (https://jqlang.github.io/jq/manual/#csv-tsv) 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+(explicació amb referències a preguntes ) 
+
+(! Cal investigar si aquest objecte és personalitzat o estàndar en PURE) . Quines implicacions té utilitzar un objecte d’aquest estil? 
+
+ 
+
+ 
+
+ 
+
+A l'ecosistema de Pure (Elsevier), l'objecte AwardManagementAward (sovint abreujat com Award) és un dels mòduls estàndard, però amb una particularitat: forma part del model de dades de gestió de la recerca (Grants/Awards), que és altament configurable. 
+
+Aquí tens la resposta a les teves preguntes sobre la naturalesa de l'objecte i les implicacions d'utilitzar-lo: 
+
+1. És un objecte personalitzat o estàndard? 
+
+És un objecte estàndard de l'API de Pure, però amb contingut personalitzable. 
+
+L'estructura és estàndard: Elsevier defineix l'esquema base (camps com uuid, pureId, awardHolders, fundingProject, managingOrganizationalUnit). Qualsevol institució que usi Pure veurà una estructura JSON gairebé idèntica. 
+
+El contingut és personalitzat: Els camps que has identificat com l'"ID FENIX" o "AJU_30193" dins de la llista d' identifiers són personalitzacions de la UAB. Pure permet afegir "Classificacions" i "Identificadors externs" propis per fer-lo compatible amb sistemes locals (com el Fènix de la UAB). 
+
+2. Implicacions d'utilitzar aquest objecte 
+
+Utilitzar l'estructura AwardManagementAward té diverses implicacions estratègiques i tècniques: 
+
+A. Traçabilitat del cicle de vida (Pre-award vs Post-award) 
+
+En el model de Pure, un Award sol ser el resultat d'una Application (sol·licitud) aprovada. 
+
+Implicació: L'objecte està dissenyat per connectar-se cap enrere (amb la proposta original) i cap endavant (amb els Projects que se'n deriven). Si només extreu l'Award, perds la visió de si aquell ajut va ser difícil d'aconseguir (taxa d'èxit). 
+
+B. Complexitat en la gestió de persones (awardHolders) 
+
+A diferència d'una publicació on hi ha "autors", aquí hi ha "titulars de l'ajut". 
+
+Implicació: L'objecte gestiona periodicitat i afiliacions temporals. Una persona pot ser IP d'un ajut des d'una unitat organitzativa específica que ja no és la seva unitat actual. Això requereix una lògica de tractament de dades més complexa que un simple camp de text amb el nom. 
+
+C. Sincronització amb tercers (El factor "ID FENIX") 
+
+L'existència d'identificadors com el del sistema Fènix indica que Pure no és la font primària d'aquesta dada, sinó que actua com a aparador o repositori integrador. 
+
+Implicació: Qualsevol canvi que vulguis fer en aquestes dades probablement s'ha de fer en el sistema d'origen (gestió econòmica/Fènix) i no a Pure, ja que una sincronització posterior podria sobreescriure les dades manuals. 
+
+D. Riquesa semàntica vs. Dificultat d'integració 
+
+L'objecte és molt ric (inclou collaborators, funder, workflow), la qual cosa és bona per a l'anàlisi de dades. 
+
+Implicació: En ser un JSON tan niat (objectes dins d'objectes), la corba d'aprenentatge per a desenvolupadors que vulguin consumir l'API és més alta que en una API REST senzilla. Per exemple, per saber el nom del finançador, has de navegar per fundingProject -> funder. 
+
+E. Dependència del Model de Elsevier 
+
+Implicació: Estàs lligat a l'esquema de dades d'Elsevier. Si en una actualització de versió de Pure canvien la jerarquia de l'objecte (per exemple, de la versió 5.20 a la 5.24), el teu codi d'integració podria trencar-se. És vital monitoritzar les versions de l'API. 
+
+Resum 
+
+L'objecte és el cor de la gestió financera de la recerca a Pure. Utilitzar-lo és la millor opció perquè garanteix que la dada està "validada" (com indica el teu camp workflow), però t'obliga a gestionar una estructura de dades complexa i altament interrelacionada amb les unitats organitzatives i les persones de la universitat. 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+Referència https://eurocris.org/cerif/main-features-cerif 
+
+Model de dades en que es basa Elsevier que es el CRIS 
