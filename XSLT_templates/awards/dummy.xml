@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+	Fitxer dummy necessari perque Saxon requereix un XML font (-s:).
+	El contingut real ve del fitxer JSON via unparsed-text().
+	Aquest fitxer no canvia mai.
+-->
+<dummy/>

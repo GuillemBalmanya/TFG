@@ -1,0 +1,192 @@
+{
+    "count": 43196,
+    "pageInformation": {
+        "offset": 0,
+        "size": 1
+    },
+    "items": [
+        {
+            "typeDiscriminator": "AwardManagementAward",
+            "pureId": 45755718,
+            "uuid": "786a60b0-3555-412b-a0d5-563ddf51ed52",
+            "createdBy": "1158530",
+            "createdDate": "2020-01-24T08:53:32+01:00",
+            "modifiedBy": "1435836",
+            "modifiedDate": "2023-10-10T11:59:51.158+02:00",
+            "version": "982c497c68e6cef2088e3a8eeb2bfb76eef496e4",
+            "awardHolders": [
+                {
+                    "typeDiscriminator": "InternalAwardHolderAssociation",
+                    "pureId": 45755721,
+                    "academicOwnershipPercentage": 1,
+                    "plannedResearcherCommitmentPercentage": 1,
+                    "name": {
+                        "firstName": "Marina",
+                        "lastName": "Caireta Sampere"
+                    },
+                    "role": {
+                        "uri": "/dk/atira/pure/award/roles/award/pi",
+                        "term": {
+                            "en_GB": "Principal Investigator",
+                            "es_ES": "Investigador/a principal",
+                            "ca_ES": "Investigador/a Principal"
+                        }
+                    },
+                    "person": {
+                        "systemName": "Person",
+                        "uuid": "b85259e9-064b-4077-b85f-a2dcbd1ab7c4"
+                    }
+                }
+            ],
+            "awardDate": "2018-08-03",
+            "collaborators": [
+                {
+                    "typeDiscriminator": "ExternalCollaboratorAssociation",
+                    "pureId": 65374893,
+                    "leadCollaborator": false,
+                    "externalOrganization": {
+                        "systemName": "ExternalOrganization",
+                        "uuid": "0a21fb97-0428-40cb-b99a-2fbc45a17897"
+                    }
+                }
+            ],
+            "descriptions": [
+                {
+                    "pureId": 65374894,
+                    "type": {
+                        "uri": "/dk/atira/pure/award/descriptions/awarddescription",
+                        "term": {
+                            "en_GB": "Description",
+                            "es_ES": "Descripcion",
+                            "ca_ES": "Descripcio"
+                        }
+                    }
+                }
+            ],
+            "actualPeriod": {
+                "startDate": "2018-09-01",
+                "endDate": "2021-02-28"
+            },
+            "expectedPeriod": {
+                "startDate": "2018-09-01",
+                "endDate": "2020-08-31"
+            },
+            "identifiers": [
+                {
+                    "typeDiscriminator": "PrimaryId",
+                    "idSource": "synchronisedAward",
+                    "value": "AJU_30193"
+                },
+                {
+                    "typeDiscriminator": "Id",
+                    "pureId": 51022743,
+                    "idSource": "synchronisedAward",
+                    "value": "AJU_30193"
+                },
+                {
+                    "typeDiscriminator": "Id",
+                    "pureId": 112154267,
+                    "idSource": "synchronisedAward",
+                    "value": "45755718"
+                },
+                {
+                    "typeDiscriminator": "ClassifiedId",
+                    "pureId": 45755723,
+                    "id": "AJU_30193",
+                    "type": {
+                        "uri": "/dk/atira/pure/upm/classifiedsource/id_fenix",
+                        "term": {
+                            "en_GB": "ID FENIX",
+                            "es_ES": "ID FENIX",
+                            "ca_ES": "ID FENIX"
+                        }
+                    }
+                },
+                {
+                    "typeDiscriminator": "ClassifiedId",
+                    "pureId": 45755724,
+                    "id": "18S05519-001",
+                    "type": {
+                        "uri": "/dk/atira/pure/upm/classifiedsource/referencecode",
+                        "term": {
+                            "en_GB": "Reference code",
+                            "es_ES": "Codigo de referencia",
+                            "ca_ES": "Codi de referencia"
+                        }
+                    }
+                }
+            ],
+            "fundings": [
+                {
+                    "typeDiscriminator": "AwardFinancialFundingAssociation",
+                    "pureId": 45755725,
+                    "funder": {
+                        "systemName": "ExternalOrganization",
+                        "uuid": "b011cc51-b025-4367-af8f-02ce79596c3d"
+                    },
+                    "fundingProjectScheme": "AJUBCN_2018",
+                    "visibility": {
+                        "key": "FREE",
+                        "description": {
+                            "en_GB": "Public - No restriction",
+                            "es_ES": "Publico - Sin restriccion",
+                            "ca_ES": "Public: cap restriccio"
+                        }
+                    },
+                    "awardedAmount": {
+                        "currency": "EUR",
+                        "value": "5000"
+                    },
+                    "fundingCollaborators": [
+                        {
+                            "typeDiscriminator": "AwardInternalFinancialFundingCollaboratorAssociation",
+                            "pureId": 45755725,
+                            "institutionalPart": {
+                                "currency": "EUR",
+                                "value": "5000"
+                            }
+                        },
+                        {
+                            "typeDiscriminator": "AwardExternalFinancialFundingCollaboratorAssociation",
+                            "pureId": 65374896,
+                            "collaborator": {
+                                "systemName": "ExternalOrganization",
+                                "uuid": "0a21fb97-0428-40cb-b99a-2fbc45a17897"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "title": {
+                "en_GB": "Del Raval al mon: defensant drets, construint alternatives.",
+                "es_ES": "Del Raval al mon: defensant drets, construint alternatives.",
+                "ca_ES": "Del Raval al mon: defensant drets, construint alternatives."
+            },
+            "type": {
+                "uri": "/dk/atira/pure/award/awardtypes/award/research_projects_and_other_grants/award",
+                "term": {
+                    "en_GB": "Award",
+                    "es_ES": "Concesion",
+                    "ca_ES": "Ajut"
+                }
+            },
+            "workflow": {
+                "step": "validated",
+                "description": {
+                    "en_GB": "Validated",
+                    "es_ES": "Validada",
+                    "ca_ES": "Validat"
+                }
+            },
+            "visibility": {
+                "key": "FREE",
+                "description": {
+                    "en_GB": "Public - No restriction",
+                    "es_ES": "Publico - Sin restriccion",
+                    "ca_ES": "Public: cap restriccio"
+                }
+            },
+            "systemName": "Award"
+        }
+    ]
+}
