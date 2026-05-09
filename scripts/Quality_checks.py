@@ -22,14 +22,8 @@ class DataQualityTests:
         self.columnes_numeriques = set(self.config.get("columnes_numeriques", []))
         self.columnes_noespais = self.config.get("columnes_noespais", True)
         self.columnes_nomajuscules = self.config.get("columnes_nomajuscules", False)
-        self.valors_null = self.config.get(
-            "valors_null",
-            ["", "NULL", "null", "None", np.nan]
-        )
-        self.report = {
-            "timestamp": str(datetime.now()),
-            "tests": {}
-        }
+        self.valors_null = self.config.get("valors_null",["", "NULL", "null", "None", np.nan])
+        self.report = {"timestamp": str(datetime.now()),"tests": {}}
 
     def carregar_csv(self, path):
         """
