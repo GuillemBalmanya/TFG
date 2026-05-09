@@ -93,13 +93,13 @@ class DataQualityTests:
         self.report["tests"]["estructura"] = resultat
         return resultat
 
-    def validar_files (self, csv_antic, csv_nou, n_files):
+    def validar_files (self, csv_antic, csv_nou):
         """
         Valida nombre de files. En cas de detectar un número diferent de registres aixeca error.
         """
-        n_antic = n_files
+        n_antic = len(csv_antic)
         n_nou = len(csv_nou)
-        diferencia = n_nou - n_antic
+        diferencia = n_nou-n_antic
         #Si la diferència és diferent de 0 significa que el número de files no és igual.
         if diferencia != 0:
             raise Exception("Número de registres diferent")
@@ -227,7 +227,7 @@ class DataQualityTests:
         print("6. Validació nulls...")
         #self.validar_nulls(df_antic, df_nou)
         #print("7. Estadístiques numèriques...")
-        self.validate_numeric_stats(df_antic, df_nou)
+        self.validar_num(df_antic, df_nou)
         print("7. Generació del resum...")
         resum = self.generar_resum()
         print(f"Resum generat: {resum}")
